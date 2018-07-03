@@ -116,15 +116,57 @@ for (i in 1:nchains){
 }
 
 # run joint models
-fit_bg <- stan(file = "wei_bg_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
-fit_hs <- stan(file = "wei_hs_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
-fit_lap <- stan(file = "wei_lap_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
-fit_gau <- stan(file = "wei_gau_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
+# fit_bg <- stan(file = "wei_bg_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
+# fit_hs <- stan(file = "wei_hs_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
+# fit_lap <- stan(file = "wei_lap_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
+# fit_gau <- stan(file = "wei_gau_joint.stan", data = data, init = init, chains = nchains, iter = niter, warmup = nwarmup)
 # run separate model for NM data
-fit_bg1 <- stan(file = "wei_bg.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
-fit_hs1 <- stan(file = "wei_hs.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
-fit_lap1 <- stan(file = "wei_lap.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
-fit_gau1 <- stan(file = "wei_gau.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
+# fit_bg1 <- stan(file = "wei_bg.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
+fit_hs1 <- stan(file="wei_hs.stan",
+                data = data1, init = init1,
+                chains = nchains,
+                iter = niter,
+                warmup = nwarmup)
+
+# Model sensitivity
+
+SetHyperparameters <- function(data) {
+  data$tau_mu <- 10
+  data$tau_al <- 10
+
+  data$r1_global_prior_loc <- 0.0
+  data$r1_global_prior_scale <- 1.0
+  data$r2_global_prior_shape <- 0.5
+  data$r2_global_prior_scale <- 0.5
+  data$r1_local_prior_loc  <- 0.0
+  data$r1_local_prior_scale <- 1.0
+  data$r2_local_prior_shape <- 0.5
+  data$r2_local_prior_scale <- 0.5
+
+  data$r_global_prior_loc <- 0.0
+  data$r_global_prior_scale <- 10.0
+  data$r_local_prior_df <- 1.0
+
+  data$beta_biom_raw_prior_loc <- 0.0
+  data$beta_biom_raw_prior_scale <- 1.0
+
+  data$beta_bg_raw_prior_loc <- 0.0
+  data$beta_bg_raw_prior_scale <- 1.0
+
+  data$alpha_raw_prior_loc <- 0.0
+  data$alpha_raw_prior_scale <- 1.0
+
+  data$mu_prior_loc <- 0.0
+  return(data)
+}
+data1 <- SetHyperparameters(data1)
+
+hs_sens_model_name <- GenerateSensitivityFromModel("wei_hs_hyperparameters.stan")
+stan_sensitivity_model <- GetStanSensitivityModel(hs_sens_model_name, data1)
+
+
+# fit_lap1 <- stan(file = "wei_lap.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
+# fit_gau1 <- stan(file = "wei_gau.stan", data = data1, init = init1, chains = nchains, iter = niter, warmup = nwarmup)
 
 # rudimentary plot
 pars_hs <- extract(fit_hs)
